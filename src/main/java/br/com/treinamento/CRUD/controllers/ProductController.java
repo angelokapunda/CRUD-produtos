@@ -1,9 +1,11 @@
 package br.com.treinamento.CRUD.controllers;
 
+import br.com.treinamento.CRUD.domain.DTOs.ResponseProductDTO;
 import br.com.treinamento.CRUD.domain.DTOs.UpdateProductsDTO;
 import br.com.treinamento.CRUD.domain.Product;
 import br.com.treinamento.CRUD.domain.repository.ProductRepository;
 import br.com.treinamento.CRUD.domain.DTOs.RequestProductsDTO;
+import br.com.treinamento.CRUD.domain.service.ProdutosService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -27,17 +30,31 @@ public class ProductController {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private ProdutosService produtosService;
+
     @GetMapping
-    public ResponseEntity getAllProducts() {
-        var allProducts = productRepository.findAllByActiveTrue();
+    public ResponseEntity<List<Product>> getAll() {
+        var allProducts = produtosService.getAllProduct();
         return ResponseEntity.ok(allProducts);
     }
 
+//    @GetMapping("/{id}")
+//    public ResponseEntity<Product> search(@PathVariable Long id) {
+//
+//    }
+
     @PostMapping
     @Transactional
-    public ResponseEntity saveProducts(@RequestBody @Valid RequestProductsDTO requestProductsDTO) {
-        var data = productRepository.save(new Product(requestProductsDTO));
-        return ResponseEntity.status(HttpStatus.CREATED).body(data);
+    public ResponseEntity<ResponseProductDTO> saveProducts(@RequestBody @Valid RequestProductsDTO requestProductsDTO) {
+
+        Product product =  produtosService.addProducts(requestProductsDTO);
+        var response = ResponseProductDTO.builder()
+                .id(product.getId())
+                .nome(product.getNome())
+                .price_in_cents(product.getPrice_in_cents())
+                .build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
